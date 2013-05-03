@@ -423,6 +423,7 @@ function addStandardMovesets($character) {
 }	
 
 function renderFrames($frames) {
+    $active = false;
 	foreach($frames as $frame) {
 		if($frame === SKIP) {					
 			$active = !$active;
