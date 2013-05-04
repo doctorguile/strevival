@@ -49,6 +49,7 @@ echo <<<EOF
 <h3><a href="./ssf2st/compare.html">Compare Side by Side</a></h3>
 <h3><a href="./ssf2st/theoryfighter.html">Drag N Drop Comparison</a></h3>
 <h3><a href="./st-safejump/">Safe Jump Guide</a></h3>
+<h3><a href="./throw-distance/">Throw Distance Chart</a></h3>
 EOF;
 /*
 echo <<<EOF
