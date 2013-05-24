@@ -27,6 +27,11 @@ EOF;
         $p1 = $m['player1'];
         $p2 = $m['player2'];
         $w = $m['winner'];
+        if ($w == $p1) {
+            $w = "$c1 [$w]";
+        } elseif ($w == $p2) {
+            $w = "$c2 [$w]";
+        }
         $e = $m['event'];
         $yt_id = $m['yt_id'];
         $start = $m['start'];
