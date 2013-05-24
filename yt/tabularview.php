@@ -12,6 +12,8 @@
     }
 </style>
 
+<h3>Youtube Matchup Videos</h3>
+
 <?php
 
 function printCharTable() {

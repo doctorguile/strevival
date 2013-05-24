@@ -3,6 +3,8 @@
 <?php
 
 function printMatches($matches) {
+    echo "<a href=?>Matchup video Index</a>";
+    echo "<div>";
     echo "<table id='matchesTable' border=1>";
     echo <<<EOF
 <THEAD>
@@ -42,6 +44,7 @@ EOF;
 EOF;
     }
     echo "</TBODY></table>";
+    echo "</div>";
     echo "<p><p>";
     echo '<iframe border=1 width="500" height="400" id=ytplayer frameborder="0" allowfullscreen></iframe>';
 
