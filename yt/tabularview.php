@@ -12,7 +12,7 @@
     }
 </style>
 
-<h3>Youtube Matchup Videos</h3>
+<h3>Youtube Matchup Videos (click on numbers to see the match vidoes)</h3>
 
 <?php
 
