@@ -1,15 +1,17 @@
 <?php
-require('db.php');
+define('WP_USE_THEMES', true);
+$wp_did_header = true;
+require_once( '../wp-load.php' );
+wp();
+if ( defined('WP_USE_THEMES') && WP_USE_THEMES ) do_action('template_redirect');
 
-$matches = array();
-if (isset($_REQUEST['c1']) && isset($_REQUEST['c2'])) {
-    $yt = new YouTubeST();
-    $matches = $yt->findMatches($_REQUEST['c1'], $_REQUEST['c2']);
-}
+get_header();
+include '../wp-content/themes/Sensei/header-bottom.php';
 
-if (empty($matches)) {
-    require('tabularview.php');
-} else {
-    require('videolinks.php');
-}
+echo '<div id="content">';
 
+require('yt.php');
+
+echo '</div>';
+//get_sidebar();
+get_footer();
