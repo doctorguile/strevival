@@ -232,6 +232,38 @@ class YouTubeST {
             $this->processWinner($selectsql);
         }
     }
+/*
+CREATE TABLE playercharacters (
+player TEXT,
+character TEXT,
+PRIMARY KEY (player, character)
+);
+*/
+    function extractUniquePlayersAndCharacters() {
+        $updatestmt = "insert or replace into playercharacters (player, character) values (:player, :character)";
+        $updatestmt = $this->db->prepare($updatestmt);
+        for($i=1;$i<=2;$i++) {
+            $pairs = $this->db->query("select distinct player$i, char$i from matches");
+            foreach ($pairs as $pair) {
+                $updatestmt->bindValue(':player', $pair["player$i"]);
+                $updatestmt->bindValue(':character', $pair["char$i"]);
+                $updatestmt->execute();
+            }
+        }
+    }
+
+    function getPlayersAndCharacters() {
+        $map = array();
+        $pairs = $this->db->query("select player, character from playercharacters");
+        foreach ($pairs as $pair) {
+            $p = $pair["player"];
+            if (!isset($map[$p])) {
+                $map[$p] = array();
+            }
+            $map[$p][] = $pair["character"];
+        }
+        return $map;
+    }
 
     function buildStatistic() {
         $map = array();
@@ -294,18 +326,36 @@ class YouTubeST {
     }
 
     function findMatches($c1, $c2) {
-        $c1 = preg_replace("/[^a-z\\.]/", "", $c1);
-        $c2 = preg_replace("/[^a-z\\.]/", "", $c2);
-
-        if (empty($c1) || empty($c2)) {
-            return array();
-        }
+        // $c1 = preg_replace("/[^a-z\\.]/", "", $c1);
+        // $c2 = preg_replace("/[^a-z\\.]/", "", $c2);
+        // if (empty($c1) || empty($c2)) {
+        //     return array();
+        // }
         if ($c1 == $c2) {
-            $query = "select * from matches where char1 = '$c1' and char2 = '$c2' order by published, event, sort_order";
+            $query = "select * from matches where char1 = :c1 and char2 = :c2 order by published, event, sort_order";
         } else {
-            $query = "select * from matches where (char1 = '$c1' and char2 = '$c2') or (char1 = '$c2' and char2 = '$c1') order by published, event, sort_order";
+            $query = "select * from matches where (char1 = :c1 and char2 = :c2) or (char1 = :c2 and char2 = :c1) order by published, event, sort_order";
         }
-        return $this->db->query($query);
+        $stmt = $this->db->prepare($query);
+        $stmt->bindValue(':c1', $c1);
+        $stmt->bindValue(':c2', $c2);
+        $stmt->execute();
+        return $stmt;
+    }
+
+    function findPlayerMatches($player) {
+        $stmt = "select * from matches where (player1 = :player) or (player2 = :player) order by published, event, sort_order";
+        $stmt = $this->db->prepare($stmt);
+        $stmt->bindValue(':player', $player);
+        $stmt->execute();
+        return $stmt;
+    }
+
+    function findNotProcessedVideos() {
+        $stmt = "select yt_id, title, content from videos where state != 'processed' order by published, title";
+        $stmt = $this->db->prepare($stmt);
+        $stmt->execute();
+        return $stmt;
     }
 
     function processXmlFile($file) {
@@ -364,6 +414,8 @@ class YouTubeST {
 //$yt->processVideos();
 //$yt->processWinners();
 //$yt->buildStatistic();
+//$yt = new YouTubeST();
+//$yt->extractUniquePlayersAndCharacters();
 
 function validateMatches() {
     $db = new PDO(YouTubeST::$dbpath);

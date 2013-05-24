@@ -46,7 +46,7 @@ EOF;
     echo "</TBODY></table>";
     echo "</div>";
     echo "<p><p>";
-    echo '<iframe border=1 width="500" height="400" id=ytplayer frameborder="0" allowfullscreen></iframe>';
+    echo '<iframe border=1 width="600" height="400" id=ytplayer frameborder="0" allowfullscreen></iframe>';
 
     echo <<<EOF
 <link rel="stylesheet" type="text/css" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css">
