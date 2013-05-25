@@ -24,3 +24,20 @@ state TEXT
 
 CREATE INDEX state_idx ON videos(state ASC);
 CREATE INDEX yt_id_idx ON videos(yt_id ASC);
+
+CREATE TABLE playercharacters (
+player TEXT,
+character TEXT,
+PRIMARY KEY (player, character)
+);
+
+CREATE TABLE usersubmission (
+contributor TEXT,
+yt_id TEXT,
+char1 TEXT,
+char2 TEXT,
+player1 TEXT,
+player2 TEXT,
+winner TEXT,
+start NUMERIC
+);

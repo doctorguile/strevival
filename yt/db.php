@@ -147,8 +147,38 @@ class YouTubeST {
     /** @var PDOStatement $updateWinnerStmt */
     private $updateWinnerStmt;
 
-    function __construct() {
-        $this->db = new PDO(self::$dbpath);
+    function __construct($dbpath=null) {
+        if (!$dbpath) $dbpath = self::$dbpath;
+        $this->db = new PDO($dbpath);
+        $update = "UPDATE videos SET state = :state WHERE yt_id = :yt_id";
+        $this->updateVideoStateStmt = $this->db->prepare($update);
+
+    }
+
+    function updateVideoState($yt_id, $state) {
+        $this->updateVideoStateStmt->bindValue(':yt_id', $yt_id);
+        $this->updateVideoStateStmt->bindValue(':state', $state);
+        $this->updateVideoStateStmt->execute();
+    }
+
+    function submitUserAnnotation($yt_id, $name, $match) {
+        // or replace
+        $updatestmt = "insert into usersubmission (contributor, yt_id, char1, char2, player1, player2, winner, start) values (:contributor, :yt_id, :char1, :char2, :player1, :player2, :winner, :start )";
+        $updatestmt = $this->db->prepare($updatestmt);
+        $fields = array(
+            "char1",
+            "char2",
+            "player1",
+            "player2",
+            "start",
+            "winner"
+        );
+        $updatestmt->bindValue(":yt_id", $yt_id);
+        $updatestmt->bindValue(":contributor", $name);
+        foreach ($fields as $f) {
+            //$updatestmt->bindValue(":$f", $match[$f]);
+        }
+        $updatestmt->execute();
     }
 
     function processVideo($row) {
@@ -183,9 +213,6 @@ class YouTubeST {
     function processVideos() {
         $insert = "INSERT INTO matches (yt_id, player1, char1, player2, char2, winner, published, start, event, event_part, sort_order) VALUES (:yt_id, :player1, :char1, :player2, :char2, :winner, :published, :start, :event, :event_part, :sort_order)";
         $this->insertMatchStmt = $this->db->prepare($insert);
-
-        $update = "UPDATE videos SET state = :state WHERE yt_id = :yt_id";
-        $this->updateVideoStateStmt = $this->db->prepare($update);
 
         $result = $this->db->query('SELECT * FROM videos');
         foreach ($result as $row) {
@@ -232,17 +259,18 @@ class YouTubeST {
             $this->processWinner($selectsql);
         }
     }
-/*
-CREATE TABLE playercharacters (
-player TEXT,
-character TEXT,
-PRIMARY KEY (player, character)
-);
-*/
+
+    /*
+    CREATE TABLE playercharacters (
+    player TEXT,
+    character TEXT,
+    PRIMARY KEY (player, character)
+    );
+    */
     function extractUniquePlayersAndCharacters() {
         $updatestmt = "insert or replace into playercharacters (player, character) values (:player, :character)";
         $updatestmt = $this->db->prepare($updatestmt);
-        for($i=1;$i<=2;$i++) {
+        for ($i = 1; $i <= 2; $i++) {
             $pairs = $this->db->query("select distinct player$i, char$i from matches");
             foreach ($pairs as $pair) {
                 $updatestmt->bindValue(':player', $pair["player$i"]);
