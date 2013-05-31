@@ -1,13 +1,19 @@
 <?php
-require("../db.php");
+require_once('../autoload.php');
 $errmsg = "";
 
-$yt_id = trim($_REQUEST['yt_id']);
+
+$yt_id = Video::sanitizeYoutubeID($_REQUEST['yt_id']);
 if (empty($yt_id)) {
     $errmsg = "no video id provided.";
 }
-$name = $_REQUEST['name'];
-if (!$name) $name = "Unknown";
+
+$contributor = $_REQUEST['contributor'];
+if (!$contributor) {
+    $contributor = "Unknown";
+} else {
+    setcookie("contributor", $contributor, time()+(60 * 60 * 24 * 365));
+}
 
 $data = $_REQUEST['data'];
 $data = json_decode($data, true);
@@ -20,14 +26,12 @@ $fields = array(
     "winner"
 );
 
-$yt = new YouTubeST('sqlite:../yt.sqlite3');
-
 if ($data && count($data) > 0) {
     foreach ($data as &$match) {
         foreach ($fields as $f) {
             $match[$f] = trim($match[$f]);
-            if (empty($match[$f])) {
-                $errmsg = "Field is empty";
+            if (empty($match[$f]) && $f != 'start') {
+                $errmsg = "Field $f is empty";
                 break;
             }
             if ($f == 'start') {
@@ -43,14 +47,29 @@ if ($data && count($data) > 0) {
     $errmsg = "No data submitted";
 }
 
+if (DB::rowExists('matches', 'yt_id', $yt_id)) {
+    $errmsg = 'video already exists in our library';
+}
+
 if (empty($errmsg)) {
-    foreach ($data as &$match) {
-        $yt->submitUserAnnotation($yt_id, $name, $match);
+    $video = UserAnnotation::addContributtedVideo($yt_id, $contributor);
+    if (!$video) {
+        $errmsg = "Error submitting video";
+    } else {
+        $general = array(
+            'contributor' => $contributor,
+        );
+        UserAnnotation::prepareInsertUserSubmittedMatchesStmt();
+        foreach ($data as &$match) {
+            $submit = array_merge($general, $match, $video);
+            UserAnnotation::submitUserAnnotation($submit);
+        }
+        Player::extractUniquePlayersAndCharacters();
     }
 }
 
 if (empty($errmsg)) {
-    $yt->updateVideoState($yt_id, 'user contributed');
+    YouTubeST::updateVideoState($yt_id, YouTubeST::$VIDEO_STATE_USERSUBMITTED);
     echo 'ok';
 } else {
     echo $errmsg;

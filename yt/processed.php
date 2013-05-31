@@ -1,9 +1,43 @@
+<header>
+    <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+
+<style>
+</style>
+</header>
 <?php
 require_once('autoload.php');
 
-function printMatches($matches) {
-    echo "<a href=?>Matchup video Index</a>";
-    echo "<div>";
+function showProcessedVideos() {
+    $vidoes = Video::findProcessed();
+
+    echo "<table id='videosTable' border=1>";
+    echo <<<EOF
+<THEAD>
+      <tr>
+        <th>ID</th>
+        <th>Title</th>
+      </tr>
+</THEAD>
+<TBODY>
+EOF;
+    foreach ($vidoes as $video) {
+        $title = htmlentities($video['title']);
+        $id = $video['id'];
+        $event = urlencode($video['event']);
+        $content = Util::htmlescape($video['content']);
+    echo <<<EOF
+  <tr>
+    <td>$id</td>
+    <td><a title='$content' href='?event=$event'>$title</a></td>
+  </tr>
+EOF;
+    }
+    echo "</TBODY></table>";
+}
+
+function showVideoMatches($event) {
+    $matches = YouTubeST::findMatchesByEvent($event);
+    echo "<h2>" . Util::htmlescape($event) . "</h2>";
     echo "<table id='matchesTable' border=1>";
     echo <<<EOF
 <THEAD>
@@ -47,9 +81,10 @@ EOF;
         $start = intval($start);
         $ct = Util::htmlescape($ct);
 
+        $idx = sprintf("%06d", $start);
         echo <<<EOF
   <tr>
-    <td><a title=$id href="javascript:void playMatch('$yt_id', $start)">$e</a></td>
+    <td><a title=$id href="javascript:void playMatch('$yt_id', $start)">$idx</a></td>
     <td>$p1</td>
     <td>$c1</td>
     <td>$p2</td>
@@ -63,26 +98,23 @@ EOF;
     echo "</div>";
 }
 
+if (isset($_REQUEST['event'])) {
+    showVideoMatches($_REQUEST['event']);
+} else {
+    showProcessedVideos();
+}
+
 ?>
 
-<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
-<link rel="stylesheet" type="text/css"
-      href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css">
+<link rel="stylesheet" type="text/css" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css">
 <script type="text/javascript" charset="utf8" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js"></script>
-<script type="text/javascript" charset="utf8"
-        src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
+<script type="text/javascript" charset="utf8" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
 <script>
     function playMatch(id, start) {
         $('#ytplayer').attr('src', 'embedded.php?id=' + id + '&start=' + start);
     }
-    $(document).ready(function () {
-        $('#matchesTable').dataTable();
+    $(document).ready(function(){
+     // $('#matchesTable').dataTable();
     });
 </script>
-
-<?php
-printMatches($matches);
-?>
-
-<p><p>
 <iframe border=1 width="600" height="400" id=ytplayer frameborder="0" allowfullscreen></iframe>

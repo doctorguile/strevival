@@ -1,6 +1,21 @@
 <?php
 require_once('autoload.php');
 
+if (isset($_REQUEST['id']) && isset($_REQUEST['side'])) {
+    $side = intval($_REQUEST['side']);
+    $id = intval($_REQUEST['id']);
+    if ($side == 1 or $side == 2) {
+        $sql = "update matches set contributor = 'papasi', winner = (select player$side from matches where id = $id) where id = $id";
+        DB::get()->exec($sql);
+        echo 'ok';
+        exit();
+    }
+    echo 'error updating';
+    exit();
+}
+
+$matches = YouTubeST::findMissingWinnerMatches();
+
 function printMatches($matches) {
     echo "<a href=?>Matchup video Index</a>";
     echo "<div>";
@@ -49,10 +64,10 @@ EOF;
 
         echo <<<EOF
   <tr>
-    <td><a title=$id href="javascript:void playMatch('$yt_id', $start)">$e</a></td>
-    <td>$p1</td>
+    <td><a title=$yt_id href="javascript:void playMatch('$yt_id', $start)">$e</a></td>
+    <td><a title=$id href="javascript:void setWinner($id,1)">$p1</a></td>
     <td>$c1</td>
-    <td>$p2</td>
+    <td><a title=$id href="javascript:void setWinner($id,2)">$p2</a></td>
     <td>$c2</td>
     <td>$w</td>
     <td>$ct</td>
@@ -61,8 +76,9 @@ EOF;
     }
     echo "</TBODY></table>";
     echo "</div>";
+    echo "<p><p>";
+    echo '<iframe border=1 width="600" height="400" id=ytplayer frameborder="0" allowfullscreen></iframe>';
 }
-
 ?>
 
 <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
@@ -72,6 +88,27 @@ EOF;
 <script type="text/javascript" charset="utf8"
         src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
 <script>
+    function setWinner(id, side) {
+        $.ajax({
+            type:"POST",
+            url:'<?php echo $_SERVER['SCRIPT_NAME']; ?>',
+            data:{
+                contributor:'papasi',
+                id:id,
+                side:side
+            },
+            success:function (response) {
+                if (response == 'ok') {
+                    alert('Thanks for submitting');
+                } else {
+                    alert(response);
+                }
+            },
+            error:function () {
+                alert('Error submitting');
+            }
+        });
+    }
     function playMatch(id, start) {
         $('#ytplayer').attr('src', 'embedded.php?id=' + id + '&start=' + start);
     }
@@ -82,7 +119,3 @@ EOF;
 
 <?php
 printMatches($matches);
-?>
-
-<p><p>
-<iframe border=1 width="600" height="400" id=ytplayer frameborder="0" allowfullscreen></iframe>
